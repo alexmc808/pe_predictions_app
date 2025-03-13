@@ -7,7 +7,7 @@ WORKDIR /app
 # Copy only necessary files
 COPY requirements.txt .
 COPY app.py .
-COPY extracted_model/model.pkl extracted_model/model.pkl
+COPY model.pkl .
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
