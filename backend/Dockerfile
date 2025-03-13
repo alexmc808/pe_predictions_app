@@ -7,7 +7,9 @@ WORKDIR /app
 # Copy only necessary files
 COPY requirements.txt .
 COPY app.py .
+COPY config.py .
 COPY model.pkl .
+COPY model.tar.gz .
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
