@@ -2,23 +2,33 @@ from fastapi import FastAPI
 import uvicorn
 import pandas as pd
 import os
+import tarfile
 import joblib
 import time
+import boto3
+from dotenv import load_dotenv
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
-from dotenv import load_dotenv
-import sys
 
-# Add project root directory to Python path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from config import MODEL_STORAGE  # Import model storage paths from config.py
-
-# Load environment variables
+# Load environment variables from .env file (if running locally)
 load_dotenv()
 
-# Read port from environment variables (default: 8080)
-PORT = int(os.getenv("PORT", 8080))
+# AWS Configuration (read from environment variables)
+AWS_REGION = os.getenv("AWS_REGION")
+S3_BUCKET = os.getenv("S3_BUCKET")
+MODEL_KEY = os.getenv("MODEL_KEY")
+
+# Ensure environment variables are set
+if not all([AWS_REGION, S3_BUCKET, MODEL_KEY]):
+    raise EnvironmentError("Missing AWS environment variables! Ensure AWS_REGION, S3_BUCKET, and MODEL_KEY are set.")
+
+# Define model paths
+MODEL_TAR_PATH = "model.tar.gz"  # Downloaded model archive
+MODEL_PKL_PATH = "model.pkl"  # Extracted model file
+
+# Initialize S3 client
+s3_client = boto3.client("s3", region_name=AWS_REGION)
 
 # Prometheus Metrics
 REQUEST_COUNT = Counter("api_requests_total", "Total API requests", ["method", "endpoint"])
@@ -38,13 +48,36 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 
         return response
 
-# Ensure model exists before loading
-model_path = MODEL_STORAGE["model_pkl"]
-if not model_path.exists():
-    raise FileNotFoundError(f"Model file not found at {model_path}. Ensure `evaluate_sagemaker.py` ran successfully!")
+def download_and_extract_model():
+    """ Download and extract model from S3 """
+    
+    # Download if not already present
+    if not os.path.exists(MODEL_PKL_PATH):
+        print(f"Downloading model from s3://{S3_BUCKET}/{MODEL_KEY}...")
+        s3_client.download_file(S3_BUCKET, MODEL_KEY, MODEL_TAR_PATH)
+        print("Model downloaded successfully.")
 
-print(f"Loading model from {model_path}...")
-model = joblib.load(model_path)
+        print("Extracting model archive...")
+        with tarfile.open(MODEL_TAR_PATH, "r:gz") as tar:
+            members = [m for m in tar.getmembers() if m.name.endswith("model.pkl")]
+            if not members:
+                raise FileNotFoundError("❌ Model file not found in archive. Check S3 contents!")
+            tar.extract(members[0], path=".")  # Extract directly in backend
+            extracted_model_name = members[0].name
+
+        # Rename extracted model to MODEL_PKL_PATH
+        os.rename(extracted_model_name, MODEL_PKL_PATH)
+        print(f"Model successfully extracted and renamed to {MODEL_PKL_PATH}")
+
+    else:
+        print(f"Model already exists: {MODEL_PKL_PATH}")
+
+# Ensure model is downloaded and extracted
+download_and_extract_model()
+
+# Load Model
+print(f"Loading model from {MODEL_PKL_PATH}...")
+model = joblib.load(MODEL_PKL_PATH)
 print("Model loaded successfully!")
 
 # Extract expected feature names from the model
@@ -91,6 +124,9 @@ def predict(data: dict):
     prediction = model.predict(df)
 
     return {"prediction": int(prediction[0])}  # Return the result
+
+# Read port from environment variables (default: 8080)
+PORT = int(os.getenv("PORT", 8080))
 
 # Run FastAPI app
 if __name__ == "__main__":
