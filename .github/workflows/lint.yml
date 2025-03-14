@@ -6,6 +6,8 @@ on:
       - main
       - develop
   pull_request:
+permissions:
+  contents: write
 
 jobs:
   lint:
