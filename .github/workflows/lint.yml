@@ -1,4 +1,4 @@
-name: Lint Python Code
+name: Lint and Format Python Code
 
 on:
   push:
@@ -11,15 +11,13 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository with SSH
-        uses: actions/checkout@v3
-        with:
-          ssh-key: ${{ secrets.ACTIONS_DEPLOY_KEY }}  # Uses GitHub SSH key if set
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: '3.8'  # Using 3.8 for linting, while project runs on 3.7
+          python-version: '3.8'  # Use Python 3.8 for linting, even if your project is on 3.7
 
       - name: Install dependencies 
         run: |
@@ -27,12 +25,27 @@ jobs:
           pip install flake8 black isort
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Run Isort (Sort Imports)
+      # Run isort and black for autoformatting
+      - name: Run Isort (Import Sorting)
         run: isort scripts/
 
-      - name: Run Black (Autoformat Code)
+      - name: Run Black (Code Formatting)
         run: black scripts/
 
+      # Verify GH_PAT is correctly set *before* attempting to push changes
+      - name: Debug GH_PAT Environment Variable
+        run: |
+          echo "Checking if GH_PAT is set..."
+          if [[ -z "${GH_PAT}" ]]; then
+            echo "❌ GH_PAT is NOT set! Ensure you added it to GitHub Secrets."
+            exit 1
+          else
+            echo "✅ GH_PAT is set!"
+          fi
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+
+      # Commit and push changes if autoformatting was applied
       - name: Commit and Push Changes (if needed)
         run: |
           git config --global user.name "github-actions[bot]"
@@ -44,7 +57,9 @@ jobs:
             git commit -m "Autoformatted code with Black and Isort [skip ci]"
             git push origin main
           fi
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
 
-      - name: Run Flake8 (Linting)
+      # Run Flake8 for linting
+      - name: Run Flake8 Linter
         run: flake8 scripts/
-        
