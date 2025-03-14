@@ -29,8 +29,14 @@ jobs:
 
       - name: Autoformat Code (Black + isort)
         run: |
+          black scripts/ --diff --color
+          isort scripts/ --diff --color
+
+      - name: Apply Black and Isort (Force changes)
+        run: |
           black scripts/
           isort scripts/
+          git status
 
       - name: Commit and push if there are changes
         run: |
