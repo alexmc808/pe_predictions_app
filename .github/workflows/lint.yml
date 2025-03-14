@@ -30,17 +30,20 @@ jobs:
           black scripts/
           isort scripts/
 
-      - name: Commit and Push Changes (if needed)
+      - name: Commit and push if there are changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add scripts/
+      
+          git add -A
           if git diff --cached --quiet; then
-            echo "No formatting changes needed."
-          else
-            git commit -m "Autoformatted code with Black and Isort [skip ci]"
-            git push
+          echo "No changes detected. Skipping commit."
+          exit 0
           fi
+
+          timestamp=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          git commit -m "Autoformatted code with Black & Isort - ${timestamp}"
+          git push origin main
 
       - name: Run Linter (flake8)
         run: flake8 scripts/
