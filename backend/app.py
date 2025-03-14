@@ -15,9 +15,9 @@ from starlette.responses import Response
 load_dotenv()
 
 # AWS Configuration (read from environment variables)
-AWS_REGION = os.getenv("AWS_REGION")
-S3_BUCKET = os.getenv("S3_BUCKET")
-MODEL_KEY = os.getenv("MODEL_KEY")
+AWS_REGION = os.getenv("AWS_REGION", "us-east-1")  # Default to us-east-1
+S3_BUCKET = os.getenv("S3_BUCKET", "pe-prediction-app")  # Default bucket name
+MODEL_KEY = os.getenv("MODEL_KEY", "models/sagemaker-scikit-learn-2025-03-13-20-37-57-658/output/model.tar.gz")  # Default model path
 
 # Ensure environment variables are set
 if not all([AWS_REGION, S3_BUCKET, MODEL_KEY]):
@@ -61,7 +61,7 @@ def download_and_extract_model():
         with tarfile.open(MODEL_TAR_PATH, "r:gz") as tar:
             members = [m for m in tar.getmembers() if m.name.endswith("model.pkl")]
             if not members:
-                raise FileNotFoundError("❌ Model file not found in archive. Check S3 contents!")
+                raise FileNotFoundError("Model file not found in archive. Check S3 contents!")
             tar.extract(members[0], path=".")  # Extract directly in backend
             extracted_model_name = members[0].name
 

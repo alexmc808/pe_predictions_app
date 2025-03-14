@@ -7,7 +7,6 @@ WORKDIR /app
 # Copy only necessary files
 COPY requirements.txt .
 COPY app.py .
-COPY config.py .
 COPY model.pkl .
 COPY model.tar.gz .
 
