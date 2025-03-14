@@ -3,23 +3,27 @@ import subprocess
 
 # Install dependencies required inside SageMaker
 print("Installing dependencies in SageMaker...")
-subprocess.call([
-    "pip", "install",
-    "boto3==1.24.17",
-    "botocore==1.27.18",
-    "numpy==1.19.2",
-    "pandas==1.1.3",
-    "scipy==1.5.3",
-    "scikit-learn==0.23.2",
-    "imbalanced-learn==0.7.0",
-    "sagemaker==2.117.0",
-    "joblib==1.1.0"
-])
+subprocess.call(
+    [
+        "pip",
+        "install",
+        "boto3==1.24.17",
+        "botocore==1.27.18",
+        "numpy==1.19.2",
+        "pandas==1.1.3",
+        "scipy==1.5.3",
+        "scikit-learn==0.23.2",
+        "imbalanced-learn==0.7.0",
+        "sagemaker==2.117.0",
+        "joblib==1.1.0",
+    ]
+)
 print("Dependencies installed!")
 
-import pandas as pd
-import joblib
 import argparse
+
+import joblib
+import pandas as pd
 from imblearn.over_sampling import SMOTE
 from imblearn.under_sampling import RandomUnderSampler
 from sklearn.ensemble import RandomForestClassifier
@@ -30,7 +34,7 @@ BEST_PARAMS = {
     "min_samples_leaf": 5,
     "min_samples_split": 5,
     "n_estimators": 100,
-    "random_state": 8
+    "random_state": 8,
 }
 SMOTE_SAMPLING_STRATEGY = 0.2
 UNDERSAMPLING_STRATEGY = 0.7
@@ -38,7 +42,9 @@ UNDERSAMPLING_STRATEGY = 0.7
 # Parse input arguments (SageMaker provides `/opt/ml/input/data/training/`)
 parser = argparse.ArgumentParser()
 parser.add_argument("--train", type=str, default="/opt/ml/input/data/training/")
-parser.add_argument("--model_dir", type=str, default="/opt/ml/model/")  # SageMaker's default model directory
+parser.add_argument(
+    "--model_dir", type=str, default="/opt/ml/model/"
+)  # SageMaker's default model directory
 args = parser.parse_args()
 
 # Check available files in the container
@@ -61,7 +67,9 @@ print(f"y_train shape BEFORE resampling: {y_train.shape}")
 # Apply SMOTE & Undersampling
 print("Applying SMOTE and undersampling...")
 smote = SMOTE(sampling_strategy=SMOTE_SAMPLING_STRATEGY, random_state=8)
-undersample = RandomUnderSampler(sampling_strategy=UNDERSAMPLING_STRATEGY, random_state=8)
+undersample = RandomUnderSampler(
+    sampling_strategy=UNDERSAMPLING_STRATEGY, random_state=8
+)
 
 X_resampled, y_resampled = smote.fit_resample(X_train, y_train)
 X_resampled, y_resampled = undersample.fit_resample(X_resampled, y_resampled)

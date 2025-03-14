@@ -12,9 +12,10 @@ Usage:
     python scripts/upload_to_s3.py
 """
 
-import boto3
-import sys
 import os
+import sys
+
+import boto3
 from dotenv import load_dotenv
 
 # Add project root directory to Python path
@@ -33,11 +34,19 @@ s3_client = boto3.client(
     "s3",
     aws_access_key_id=AWS_ACCESS_KEY_ID,
     aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-    region_name=AWS_REGION
+    region_name=AWS_REGION,
 )
 
 # List of dataset files to upload
-dataset_files = ["X_train.csv", "X_val.csv", "X_test.csv", "y_train.csv", "y_val.csv", "y_test.csv"]
+dataset_files = [
+    "X_train.csv",
+    "X_val.csv",
+    "X_test.csv",
+    "y_train.csv",
+    "y_val.csv",
+    "y_test.csv",
+]
+
 
 def check_bucket():
     """Check if the S3 bucket is accessible."""
@@ -47,6 +56,7 @@ def check_bucket():
         print(f"Bucket '{S3_BUCKET}' is accessible!")
     except Exception as e:
         print(f"S3 Bucket Error: {e}")
+
 
 def upload_files():
     """Uploads dataset files from MODEL_DATA_DIR to S3."""
@@ -67,6 +77,7 @@ def upload_files():
                 print(f"Upload failed for {filename}: {e}")
         else:
             print(f"File not found: {local_path}")
+
 
 if __name__ == "__main__":
     upload_files()

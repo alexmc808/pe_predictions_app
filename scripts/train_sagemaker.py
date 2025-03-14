@@ -1,8 +1,9 @@
+import os
+
 import boto3
 import sagemaker
-from sagemaker.sklearn.estimator import SKLearn
-import os
 from dotenv import load_dotenv
+from sagemaker.sklearn.estimator import SKLearn
 
 # Load AWS Credentials from .env
 load_dotenv()
@@ -26,7 +27,7 @@ sklearn_estimator = SKLearn(
     framework_version="0.23-1",
     sagemaker_session=sagemaker_session,
     input_mode="File",
-    output_path=S3_MODEL_OUTPUT_PATH 
+    output_path=S3_MODEL_OUTPUT_PATH,
 )
 
 # Start training job

@@ -20,19 +20,21 @@ Usage:
 - Ensure the `config.py` file correctly defines the paths for models and test data."
 """
 
-import joblib
-import boto3
-import pandas as pd
-import numpy as np
-import tarfile
-from dotenv import load_dotenv
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
-import sys
 import os
+import sys
+import tarfile
+
+import boto3
+import joblib
+import numpy as np
+import pandas as pd
+from dotenv import load_dotenv
+from sklearn.metrics import (accuracy_score, f1_score, precision_score,
+                             recall_score, roc_auc_score)
 
 # Add project root directory to Python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from config import MODEL_FILES, MODEL_STORAGE, MODEL_DIR
+from config import MODEL_DIR, MODEL_FILES, MODEL_STORAGE
 
 # Load environment variables
 load_dotenv()
@@ -42,7 +44,7 @@ AWS_REGION = os.getenv("AWS_REGION")
 S3_BUCKET = os.getenv("S3_BUCKET")
 MODEL_KEY = os.getenv("MODEL_KEY")
 
-# Ensure models directory exists 
+# Ensure models directory exists
 os.makedirs(MODEL_DIR, exist_ok=True)
 print(f"Models directory ready: {MODEL_DIR}")
 
@@ -71,7 +73,9 @@ with tarfile.open(model_tar_path, "r:gz") as tar:
 
 # Verify Extraction
 if not model_pkl_path.exists():
-    raise FileNotFoundError(f"No valid model file found at {model_pkl_path}. Check extraction!")
+    raise FileNotFoundError(
+        f"No valid model file found at {model_pkl_path}. Check extraction!"
+    )
 print(f"Model successfully extracted: {model_pkl_path}")
 
 # Load Model
@@ -97,7 +101,9 @@ expected_features = getattr(model, "feature_names_in_", None)
 if expected_features:
     X_test.columns = expected_features
 else:
-    print("Warning: Model does not have feature names stored. Using default column indices.")
+    print(
+        "Warning: Model does not have feature names stored. Using default column indices."
+    )
 
 # Make Predictions
 print("Making predictions...")
