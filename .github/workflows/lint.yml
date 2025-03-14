@@ -12,54 +12,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: '3.8'  # Use Python 3.8 for linting, even if your project is on 3.7
+          python-version: "3.8"  # Linter only (Project still runs 3.7)
 
-      - name: Install dependencies 
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 black isort
+          pip install black isort flake8
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      # Run isort and black for autoformatting
-      - name: Run Isort (Import Sorting)
-        run: isort scripts/
-
-      - name: Run Black (Code Formatting)
-        run: black scripts/
-
-      # Verify GH_PAT is correctly set *before* attempting to push changes
-      - name: Debug GH_PAT Environment Variable
+      - name: Autoformat Code (Black + isort)
         run: |
-          echo "Checking if GH_PAT is set..."
-          if [[ -z "${GH_PAT}" ]]; then
-            echo "GH_PAT is NOT set! Ensure you added it to GitHub Secrets."
-            exit 1
-          else
-            echo "GH_PAT is set!"
-          fi
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
+          black scripts/
+          isort scripts/
 
       - name: Commit and Push Changes (if needed)
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git
           git add scripts/
           if git diff --cached --quiet; then
             echo "No formatting changes needed."
           else
             git commit -m "Autoformatted code with Black and Isort [skip ci]"
-            git push origin main
+            git push
           fi
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
 
-      # Run Flake8 for linting
-      - name: Run Flake8 Linter
+      - name: Run Linter (flake8)
         run: flake8 scripts/
