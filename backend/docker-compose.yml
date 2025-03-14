@@ -5,8 +5,11 @@ services:
     image: pe-prediction-app
     ports:
       - "8080:8080"
-    env_file:
-      - .env
+    environment:
+      - AWS_REGION=us-east-1
+      - S3_BUCKET=pe-prediction-app
+      - MODEL_KEY=models/sagemaker-scikit-learn-2025-03-13-20-37-57-658/output/model.tar.gz
+      - PORT=8080
     networks:
       - monitoring
 
