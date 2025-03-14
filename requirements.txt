@@ -59,4 +59,7 @@ sagemaker==2.117.0
 requests==2.31.0
 prometheus_client==0.16.0
 python-dotenv==0.21.1
-flake8
+importlib-metadata==4.2.0
+flake8==4.0.1
+black==22.3.0 
+isort==5.10.1 
