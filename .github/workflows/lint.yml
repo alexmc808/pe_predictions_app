@@ -31,9 +31,6 @@ jobs:
       - name: Run Black (Autoformat Code)
         run: black scripts/
 
-      - name: Run Flake8 (Linting)
-        run: flake8 scripts/
-      
       - name: Commit and Push Changes (if needed)
         run: |
           git config --global user.name "github-actions[bot]"
@@ -47,3 +44,6 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Flake8 (Linting)
+        run: flake8 scripts/
