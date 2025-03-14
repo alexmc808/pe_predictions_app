@@ -1,4 +1,4 @@
-name: Lint and Format Python Code
+name: Lint Python Code
 
 on:
   push:
@@ -11,21 +11,23 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - name: Checkout repository with SSH
+        uses: actions/checkout@v3
+        with:
+          ssh-key: ${{ secrets.ACTIONS_DEPLOY_KEY }}  # Uses GitHub SSH key if set
 
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: '3.8'  # Using 3.8 for the linter, while keeping scripts in 3.7
+          python-version: '3.8'  # Using 3.8 for linting, while project runs on 3.7
 
-      - name: Install dependencies
+      - name: Install dependencies 
         run: |
           python -m pip install --upgrade pip
-          pip install black isort flake8
+          pip install flake8 black isort
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Run Isort (Organize Imports)
+      - name: Run Isort (Sort Imports)
         run: isort scripts/
 
       - name: Run Black (Autoformat Code)
@@ -40,8 +42,9 @@ jobs:
             echo "No formatting changes needed."
           else
             git commit -m "Autoformatted code with Black and Isort [skip ci]"
-            git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/alexmc808/pe_predictions_app.git HEAD:main
+            git push origin main
           fi
 
       - name: Run Flake8 (Linting)
         run: flake8 scripts/
+        
